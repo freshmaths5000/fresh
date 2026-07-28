@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎨 小小藝術家 - 低小兒童繪畫大冒險 🌟</title>
+  <style>
+    :root {
+      --bg-color: #f0f7ff;
+      --card-bg: #ffffff;
+      --primary: #ff6b81;
+      --secondary: #70a1ff;
+      --accent: #ffdd59;
+      --dark: #2f3542;
+      --font-family: 'Comic Sans MS', 'Chalkboard SE', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      background-image: radial-gradient(#dfe4ea 2px, transparent 2px);
+      background-size: 24px 24px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+      color: var(--dark);
+    }
+
+    /* 頂部標題與玩家狀態欄 */
+    header {
+      width: 100%;
+      max-width: 950px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 12px 20px;
+      border-radius: 20px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+      margin-bottom: 12px;
+      border: 3px solid #e1b12c;
+    }
+
+    .logo-zone {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-zone h1 {
+      font-size: 1.5rem;
+      color: #ff4757;
+      text-shadow: 1px 1px 0px #ffeaa7;
+    }
+
+    .player-stats {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .level-badge {
+      background: linear-gradient(135deg, #ff758c, #ff7eb3);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 15px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      box-shadow: 0 4px 8px rgba(255,117,140,0.3);
+    }
+
+    .star-count {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #ffa502;
+    }
+
+    /* 主內容區域 Layout */
+    .main-container {
+      width: 100%;
+      max-width: 950px;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 15px;
+    }
+
+    /* 左側控制面板 (模式、工具、顏色) */
+    .sidebar {
+      background: var(--card-bg);
+      padding: 15px;
+      border-radius: 20px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #57606f;
+      border-left: 4px solid var(--primary);
+      padding-left: 8px;
+      margin-bottom: 8px;
+    }
+
+    /* 模式選擇鈕 */
+    .mode-selector {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .mode-btn {
+      padding: 10px;
+      border: 2px solid #dfe4ea;
+      border-radius: 12px;
+      background: #f1f2f6;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .mode-btn.active {
+      border-color: #ff6b81;
+      background: #ffeaa7;
+      color: #d63031;
+    }
+
+    /* 畫筆顏色選擇盤 */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .color-dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+      transition: transform 0.2s;
+    }
+
+    .color-dot:hover, .color-dot.active {
+      transform: scale(1.2);
+      border-color: #2f3542;
+    }
+
+    /* 筆刷大小選擇 */
+    .brush-sizes {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: #f1f2f6;
+      padding: 8px;
+      border-radius: 12px;
+    }
+
+    .size-dot {
+      background: #2f3542;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .size-dot.active {
+      background: var(--primary);
+      box-shadow: 0 0 0 3px #ffeaa7;
+    }
+
+    /* 貼紙區 */
+    .stamps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .stamp-btn {
+      font-size: 1.5rem;
+      background: #f1f2f6;
+      border: 1px solid #ced6e0;
+      border-radius: 10px;
+      padding: 5px;
+      cursor: pointer;
+      text-align: center;
+      transition: transform 0.1s;
+    }
+
+    .stamp-btn:hover, .stamp-btn.active {
+      background: #ffeaa7;
+      transform: scale(1.15);
+    }
+
+    /* 畫布工作區 */
+    .canvas-area {
+      background: var(--card-bg);
+      border-radius: 20px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    /* 任務/提示欄 */
+    .task-banner {
+      width: 100%;
+      background: #eccc68;
+      color: #2f3542;
+      padding: 10px 15px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95rem;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      border: 4px dashed #70a1ff;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #ffffff;
+      cursor: crosshair;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    /* 工具按鈕欄 (復原、清空、儲存、提交) */
+    .tool-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      margin-top: 12px;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-clear { background: #ff4757; color: white; }
+    .btn-undo { background: #ffa502; color: white; }
+    .btn-save { background: #2ed573; color: white; }
+    .btn-submit { background: #1e90ff; color: white; font-size: 1.05rem; }
+
+    /* 慶祝彈窗 Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-card {
+      background: white;
+      padding: 30px;
+      border-radius: 24px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.6); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-card h2 { color: #ff4757; margin-bottom: 10px; font-size: 1.8rem; }
+    .modal-card p { color: #57606f; margin-bottom: 20px; font-size: 1.1rem; }
+    .badge-icon-big { font-size: 4rem; margin: 15px 0; }
+
+  </style>
+</head>
+<body>
+
+  <!-- 頂部資訊欄 -->
+  <header>
+    <div class="logo-zone">
+      <span style="font-size: 2rem;">🎨</span>
+      <h1>小小藝術家</h1>
+    </div>
+    <div class="player-stats">
+      <span class="level-badge" id="level-display">Lv.1 塗鴉新手</span>
+      <div class="star-count">⭐ <span id="star-display">0</span> 顆星星</div>
+    </div>
+  </header>
+
+  <!-- 主功能畫面 -->
+  <div class="main-container">
+
+    <!-- 左側面板：模式與工具 -->
+    <div class="sidebar">
+      
+      <!-- 模式選擇 -->
+      <div class="section-title">選擇創作模式</div>
+      <div class="mode-selector">
+        <button class="mode-btn active" id="mode-free" onclick="switchMode('free')">
+          <span>🎨 自由創意畫筆</span>
+        </button>
+        <button class="mode-btn" id="mode-task" onclick="switchMode('task')">
+          <span>🧩 主題繪畫挑戰</span>
+        </button>
+      </div>
+
+      <!-- 筆刷顏色 -->
+      <div class="section-title">選擇顏色</div>
+      <div class="color-grid" id="color-grid">
+        <!-- JS 動態生成顏色球 -->
+      </div>
+
+      <!-- 筆刷大小 -->
+      <div class="section-title">筆刷大小</div>
+      <div class="brush-sizes">
+        <div class="size-dot" style="width: 10px; height: 10px;" onclick="setBrushSize(4, this)"></div>
+        <div class="size-dot active" style="width: 18px; height: 18px;" onclick="setBrushSize(10, this)"></div>
+        <div class="size-dot" style="width: 26px; height: 26px;" onclick="setBrushSize(20, this)"></div>
+      </div>
+
+      <!-- 可愛貼紙蓋章 -->
+      <div class="section-title">魔法貼紙 (點擊加到畫布)</div>
+      <div class="stamps-grid" id="stamps-grid">
+        <div class="stamp-btn" onclick="selectStamp('⭐')">⭐</div>
+        <div class="stamp-btn" onclick="selectStamp('🌸')">🌸</div>
+        <div class="stamp-btn" onclick="selectStamp('🐱')">🐱</div>
+        <div class="stamp-btn" onclick="selectStamp('🚀')">🚀</div>
+        <div class="stamp-btn" onclick="selectStamp('☀️')">☀️</div>
+        <div class="stamp-btn" onclick="selectStamp('🌈')">🌈</div>
+        <div class="stamp-btn" onclick="selectStamp('🍎')">🍎</div>
+        <div class="stamp-btn" onclick="selectStamp('👑')">👑</div>
+      </div>
+
+    </div>
+
+    <!-- 右側畫布區域 -->
+    <div class="canvas-area">
+      
+      <!-- 任務提示欄 (主題模式下顯示) -->
+      <div class="task-banner" id="task-banner">
+        <span id="task-text">🌈 自由創作模式：揮灑你的想像力吧！</span>
+        <span id="task-reward">✨ 完成可得 +30 星星</span>
+      </div>
+
+      <!-- 畫布容器 -->
+      <div class="canvas-wrapper">
+        <canvas id="paintCanvas" width="600" height="420"></canvas>
+      </div>
+
+      <!-- 工具按鈕列 -->
+      <div class="tool-bar">
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-undo" onclick="undo()">↩️ 上一步</button>
+          <button class="btn btn-clear" onclick="clearCanvas()">🗑️ 清空畫布</button>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-save" onclick="downloadArt()">💾 下載作品</button>
+          <button class="btn btn-submit" id="submit-btn" onclick="submitArtwork()">🎉 完成作品！</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- 獎勵 Modal -->
+  <div class="modal-overlay" id="reward-modal">
+    <div class="modal-card">
+      <h2>🎉 太棒了！</h2>
+      <div class="badge-icon-big" id="modal-icon">🌟</div>
+      <p id="modal-msg">你完成了一幅美麗的作品！</p>
+      <button class="btn btn-submit" style="width: 100%; justify-content: center;" onclick="closeModal()">繼續創作 🎨</button>
+    </div>
+  </div>
+
+  <script>
+    // --- 遊戲狀態與變數 ---
+    const canvas = document.getElementById('paintCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let isDrawing = false;
+    let currentColor = '#ff4757';
+    let currentBrushSize = 10;
+    let currentTool = 'brush'; // 'brush' 或 'stamp'
+    let selectedStampEmoji = '';
+
+    let currentMode = 'free'; // 'free' 或 'task'
+    let currentTaskIndex = 0;
+
+    // 歷程紀錄 (Undo 功能)
+    let historyStack = [];
+    const maxHistory = 10;
+
+    // 玩家存檔
+    let player = JSON.parse(localStorage.getItem('art_game_player')) || {
+      stars: 0,
+      level: 1,
+      completedTasks: 0
+    };
+
+    // 畫筆顏色盤
+    const colors = [
+      '#ff4757', '#ffa502', '#2ed573', '#1e90ff',
+      '#3742fa', '#9b59b6', '#e84393', '#2f3542',
+      '#74b9ff', '#55efc4', '#ffeaa7', '#ffffff'
+    ];
+
+    // 主題繪畫任務清單
+    const tasks = [
+      { title: '☀️ 請畫出一個溫暖的大太陽與白雲', reward: 50 },
+      { title: '🌸 請畫出一朵美麗的小花或樹木', reward: 50 },
+      { title: '🐱 請畫出你最喜歡的可愛小動物', reward: 60 },
+      { title: '🚀 請畫出一艘飛往太空的火箭', reward: 70 }
+    ];
+
+    // --- 初始化 ---
+    function init() {
+      // 填滿畫布背景為白色
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      saveState();
+
+      // 渲染色彩盤
+      const colorGrid = document.getElementById('color-grid');
+      colors.forEach((col, idx) => {
+        const dot = document.createElement('div');
+        dot.className = `color-dot ${idx === 0 ? 'active' : ''}`;
+        dot.style.backgroundColor = col;
+        dot.onclick = () => selectColor(col, dot);
+        colorGrid.appendChild(dot);
+      });
+
+      // 綁定 Canvas 事件 (滑鼠與觸控)
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseleave', stopDrawing);
+
+      canvas.addEventListener('touchstart', handleTouchStart);
+      canvas.addEventListener('touchmove', handleTouchMove);
+      canvas.addEventListener('touchend', stopDrawing);
+
+      updatePlayerUI();
+    }
+
+    // --- 存檔與 UI 更新 ---
+    function savePlayer() {
+      localStorage.setItem('art_game_player', JSON.stringify(player));
+    }
+
+    function updatePlayerUI() {
+      document.getElementById('star-display').innerText = player.stars;
+      document.getElementById('level-display').innerText = `Lv.${player.level} ${getLevelName(player.level)}`;
+    }
+
+    function getLevelName(level) {
+      if (level === 1) return '塗鴉新手';
+      if (level === 2) return '色彩小尖兵';
+      if (level === 3) return '小小畫家';
+      return '繪畫大師';
+    }
+
+    // --- 畫布 Undo / 歷史記錄 ---
+    function saveState() {
+      if (historyStack.length >= maxHistory) {
+        historyStack.shift();
+      }
+      historyStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    }
+
+    function undo() {
+      if (historyStack.length > 1) {
+        historyStack.pop(); // 移除當前狀態
+        const previousState = historyStack[historyStack.length - 1];
+        ctx.putImageData(previousState, 0, 0);
+      }
+    }
+
+    function clearCanvas() {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      saveState();
+    }
+
+    // --- 畫筆與工具切換 ---
+    function selectColor(color, element) {
+      currentColor = color;
+      currentTool = 'brush';
+      document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+      element.classList.add('active');
+      document.querySelectorAll('.stamp-btn').forEach(s => s.classList.remove('active'));
+    }
+
+    function setBrushSize(size, element) {
+      currentBrushSize = size;
+      document.querySelectorAll('.size-dot').forEach(d => d.classList.remove('active'));
+      element.classList.add('active');
+    }
+
+    function selectStamp(emoji) {
+      currentTool = 'stamp';
+      selectedStampEmoji = emoji;
+      document.querySelectorAll('.stamp-btn').forEach(s => s.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    // --- 繪圖邏輯 ---
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+    }
+
+    function startDrawing(e) {
+      const pos = getPos(e);
+
+      if (currentTool === 'stamp') {
+        // 蓋貼紙模式
+        ctx.font = `${currentBrushSize * 3 + 20}px serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(selectedStampEmoji, pos.x, pos.y);
+        saveState();
+        return;
+      }
+
+      // 畫筆模式
+      isDrawing = true;
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = currentBrushSize;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+    }
+
+    function draw(e) {
+      if (!isDrawing || currentTool !== 'brush') return;
+      const pos = getPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    }
+
+    function stopDrawing() {
+      if (isDrawing) {
+        isDrawing = false;
+        ctx.closePath();
+        saveState();
+      }
+    }
+
+    // 觸控支援
+    function handleTouchStart(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      startDrawing(touch);
+    }
+
+    function handleTouchMove(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      draw(touch);
+    }
+
+    // --- 模式切換 ---
+    function switchMode(mode) {
+      currentMode = mode;
+      document.getElementById('mode-free').classList.toggle('active', mode === 'free');
+      document.getElementById('mode-task').classList.toggle('active', mode === 'task');
+
+      const banner = document.getElementById('task-banner');
+      const taskText = document.getElementById('task-text');
+      const taskReward = document.getElementById('task-reward');
+
+      if (mode === 'free') {
+        taskText.innerText = '🌈 自由創作模式：揮灑你的想像力吧！';
+        taskReward.innerText = '✨ 完成可得 +30 星星';
+      } else {
+        const task = tasks[currentTaskIndex];
+        taskText.innerText = `🧩 任務 ${currentTaskIndex + 1}：${task.title}`;
+        taskReward.innerText = `✨ 完成可得 +${task.reward} 星星`;
+      }
+      clearCanvas();
+    }
+
+    // --- 提交作品與獎勵機制 ---
+    function submitArtwork() {
+      let earnedStars = 30;
+
+      if (currentMode === 'task') {
+        earnedStars = tasks[currentTaskIndex].reward;
+        currentTaskIndex = (currentTaskIndex + 1) % tasks.length;
+      }
+
+      player.stars += earnedStars;
+      player.completedTasks++;
+
+      // 升級機制 (每 100 星星升一級)
+      if (player.stars >= player.level * 100) {
+        player.level++;
+        showModal('👑 恭喜升級！', `你升到了 Lv.${player.level} ${getLevelName(player.level)}！`, '🏆');
+      } else {
+        showModal('🎉 太棒了！', `作品真漂亮！獲得了 ${earnedStars} 顆星星！`, '⭐');
+      }
+
+      savePlayer();
+      updatePlayerUI();
+
+      // 若在任務模式，更新下一個任務
+      if (currentMode === 'task') {
+        switchMode('task');
+      }
+    }
+
+    function downloadArt() {
+      const link = document.createElement('a');
+      link.download = 'my-artwork.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+
+    function showModal(title, msg, icon) {
+      document.querySelector('#reward-modal h2').innerText = title;
+      document.getElementById('modal-msg').innerText = msg;
+      document.getElementById('modal-icon').innerText = icon;
+      document.getElementById('reward-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('reward-modal').style.display = 'none';
+    }
+
+    // 啟動應用
+    window.onload = init;
+  </script>
+</body>
+</html>
