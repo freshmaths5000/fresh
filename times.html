@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小二九九乘法表大冒險 🎮</title>
+  <style>
+    :root {
+      --primary-color: #ff6b6b;
+      --secondary-color: #4ecdc4;
+      --accent-color: #ffe66d;
+      --dark-color: #2f3542;
+      --light-color: #f7f9fc;
+      --card-bg: #ffffff;
+      --shadow: 0 8px 20px rgba(0,0,0,0.12);
+      --font-family: 'Comic Sans MS', 'Chalkboard SE', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+      user-select: none;
+    }
+
+    body {
+      background: linear-gradient(135deg, #a8edd1 0%, #fed6e3 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+      color: var(--dark-color);
+    }
+
+    .game-container {
+      background: var(--card-bg);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 650px;
+      padding: 25px;
+      position: relative;
+      overflow: hidden;
+      border: 4px solid #fff;
+    }
+
+    /* 頂部玩家資訊欄 */
+    .player-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f0f3f8;
+      padding: 12px 20px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+    }
+
+    .level-badge {
+      background: linear-gradient(45deg, #ff9a9e, #fecfef);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: bold;
+      color: #333;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .score-display, .combo-display {
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    .combo-display {
+      color: #ff4757;
+    }
+
+    /* 經驗值條 */
+    .exp-bar-container {
+      width: 100%;
+      height: 12px;
+      background: #e0e0e0;
+      border-radius: 6px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+
+    .exp-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #4facfe, #00f2fe);
+      transition: width 0.3s ease;
+    }
+
+    /* 畫面切換控制 */
+    .screen {
+      display: none;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 標題與按鈕 */
+    h1 {
+      text-align: center;
+      color: #ff6b6b;
+      margin-bottom: 10px;
+      font-size: 2rem;
+      text-shadow: 2px 2px 0px #ffe66d;
+    }
+
+    p.subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 20px;
+      font-size: 1rem;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-easy { background: #7bed9f; color: #2ed573; color: #1e3799; }
+    .btn-medium { background: #70a1ff; color: #1e3799; }
+    .btn-hard { background: #ff7f50; color: #fff; }
+    .btn-primary { background: #ff6b6b; color: #fff; }
+    .btn-secondary { background: #a4b0be; color: #fff; }
+
+    .difficulty-desc {
+      font-size: 0.85rem;
+      font-weight: normal;
+      display: block;
+      margin-top: 3px;
+      opacity: 0.8;
+    }
+
+    /* 遊戲進行畫面 */
+    .game-status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .timer-box {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #ff4757;
+      background: #ffeaa7;
+      padding: 6px 16px;
+      border-radius: 12px;
+    }
+
+    .question-card {
+      background: #f8f9fa;
+      border: 3px dashed #4ecdc4;
+      border-radius: 20px;
+      padding: 25px;
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .question-text {
+      font-size: 3.5rem;
+      font-weight: bold;
+      color: #2f3542;
+      letter-spacing: 2px;
+    }
+
+    .time-bonus-indicator {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 0.9rem;
+      color: #2ed573;
+      font-weight: bold;
+    }
+
+    /* 技能區域 */
+    .skills-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .skill-btn {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      background: #f1f2f6;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .skill-btn.available {
+      background: #eccc68;
+      border-color: #ffa502;
+      color: #2f3542;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+
+    .skill-btn.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* 選項按鈕 grid */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .option-btn {
+      background: #ffffff;
+      border: 3px solid #dfe4ea;
+      border-radius: 16px;
+      padding: 15px;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #2f3542;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .option-btn:hover {
+      background: #f1f2f6;
+      border-color: #a4b0be;
+    }
+
+    .option-btn.correct {
+      background: #2ed573 !important;
+      color: white !important;
+      border-color: #2ed573 !important;
+    }
+
+    .option-btn.wrong {
+      background: #ff4757 !important;
+      color: white !important;
+      border-color: #ff4757 !important;
+    }
+
+    /* 結算與獎勵畫面 */
+    .result-box {
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    .score-big {
+      font-size: 3rem;
+      color: #ff6b6b;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .reward-card {
+      background: #fff9db;
+      border: 2px dashed #f1c40f;
+      border-radius: 16px;
+      padding: 15px;
+      margin: 15px 0;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .reward-icon {
+      font-size: 3rem;
+    }
+
+    .reward-text {
+      text-align: left;
+    }
+
+    .reward-title {
+      font-weight: bold;
+      color: #d35400;
+      font-size: 1.1rem;
+    }
+
+    /* 圖鑑/稱號 modal */
+    .badges-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 15px 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .badge-item {
+      background: #f1f2f6;
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+      font-size: 0.8rem;
+      opacity: 0.4;
+    }
+
+    .badge-item.unlocked {
+      opacity: 1;
+      background: #e3fcbf;
+      border: 1px solid #b7eb8f;
+    }
+
+    .badge-icon {
+      font-size: 1.8rem;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* 反饋浮動特效 */
+    .floating-text {
+      position: absolute;
+      font-weight: bold;
+      font-size: 1.5rem;
+      animation: floatUp 0.8s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-30px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-container">
+    <!-- 頂部玩家資訊 -->
+    <div class="player-header">
+      <div>
+        <span class="level-badge" id="player-level">Lv.1 數學新手</span>
+        <div class="exp-bar-container">
+          <div class="exp-bar-fill" id="exp-fill"></div>
+        </div>
+      </div>
+      <div>
+        <div class="score-display">總分: <span id="total-score" style="color:#ff6b6b">0</span></div>
+      </div>
+    </div>
+
+    <!-- 1. 主選單畫面 -->
+    <div id="start-screen" class="screen active">
+      <h1>乘數表大冒險 🚀</h1>
+      <p class="subtitle">限時1分鐘！回答越快，得分越高！</p>
+      
+      <button class="btn btn-easy" onclick="startGame('easy')">
+        🟢 簡單關卡 (2, 5, 10 乘數)
+        <span class="difficulty-desc">每題基礎分: 100 分 | 適合初學者</span>
+      </button>
+
+      <button class="btn btn-medium" onclick="startGame('medium')">
+        🟡 進階關卡 (3, 4, 6, 7 乘數)
+        <span class="difficulty-desc">每題基礎分: 150 分 | 挑戰反應力</span>
+      </button>
+
+      <button class="btn btn-hard" onclick="startGame('hard')">
+        🔴 達人關卡 (8, 9, 混合挑戰)
+        <span class="difficulty-desc">每題基礎分: 200 分 | 真正的乘法大師</span>
+      </button>
+
+      <button class="btn btn-secondary" onclick="showScreen('trophy-screen')" style="margin-top: 15px;">
+        🏆 我的成就與獎勵圖鑑
+      </button>
+    </div>
+
+    <!-- 2. 遊戲進行畫面 -->
+    <div id="game-screen" class="screen">
+      <div class="game-status-bar">
+        <div class="timer-box">⏱️ <span id="timer">60</span>s</div>
+        <div class="combo-display">連對: <span id="combo-count">0</span> 🔥</div>
+        <div>得分: <span id="current-score">0</span></div>
+      </div>
+
+      <!-- 特殊技能區 -->
+      <div class="skills-container">
+        <button id="skill-freeze" class="skill-btn disabled" onclick="useSkill('freeze')">
+          <span>❄️ 時間凍結 (5s)</span>
+          <small id="freeze-req">Lv.2 解鎖</small>
+        </button>
+        <button id="skill-fifty" class="skill-btn disabled" onclick="useSkill('fifty')">
+          <span>🎯 排除錯誤答案</span>
+          <small id="fifty-req">Lv.3 解鎖</small>
+        </button>
+      </div>
+
+      <!-- 題目卡片 -->
+      <div class="question-card">
+        <div id="time-bonus-tag" class="time-bonus-indicator">+速度加分!</div>
+        <div class="question-text" id="question">2 × 3 = ?</div>
+      </div>
+
+      <!-- 選項按鈕 -->
+      <div class="options-grid" id="options-container">
+        <!-- JS 動態生成按鈕 -->
+      </div>
+    </div>
+
+    <!-- 3. 結算畫面 -->
+    <div id="result-screen" class="screen">
+      <h1>🎉 挑戰結束！</h1>
+      <div class="result-box">
+        <p>本次獲得分數</p>
+        <div class="score-big" id="result-score">0</div>
+        <p>獲得經驗值: +<span id="gained-exp">0</span> EXP</p>
+
+        <!-- 特別獎勵展示區 -->
+        <div id="reward-box" class="reward-card" style="display: none;">
+          <div class="reward-icon" id="reward-icon">🎁</div>
+          <div class="reward-text">
+            <div class="reward-title" id="reward-title">獲得特別獎勵！</div>
+            <div id="reward-desc" style="font-size: 0.9rem; color: #555;">完美達成任務解鎖！</div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="showScreen('start-screen')">再玩一次 🔄</button>
+        <button class="btn btn-secondary" onclick="showScreen('trophy-screen')">查看圖鑑 🏆</button>
+      </div>
+    </div>
+
+    <!-- 4. 圖鑑與成就畫面 -->
+    <div id="trophy-screen" class="screen">
+      <h1>🏆 獎勵圖鑑</h1>
+      <p class="subtitle">升級並完成挑戰來解鎖獎勵吧！</p>
+
+      <div class="badges-grid" id="badges-container">
+        <!-- 動態渲染獎勵列表 -->
+      </div>
+
+      <button class="btn btn-secondary" onclick="showScreen('start-screen')">返回主選單</button>
+    </div>
+  </div>
+
+  <script>
+    // --- 遊戲資料與狀態 ---
+    const GAME_CONFIG = {
+      easy: { name: '簡單', tables: [2, 5, 10], baseScore: 100 },
+      medium: { name: '進階', tables: [3, 4, 6, 7], baseScore: 150 },
+      hard: { name: '達人', tables: [8, 9, 2, 3, 4, 5, 6, 7, 8, 9], baseScore: 200 }
+    };
+
+    // 玩家存檔資料 (使用 localStorage 儲存)
+    let playerData = JSON.parse(localStorage.getItem('math_game_player')) || {
+      level: 1,
+      exp: 0,
+      totalScore: 0,
+      unlockedBadges: []
+    };
+
+    // 獎勵/勳章清單
+    const BADGES = [
+      { id: 'first_play', icon: '🐣', name: '初出茅廬', desc: '完成第一局遊戲' },
+      { id: 'combo_10', icon: '🔥', name: '連勝大師', desc: '單局達 10 連勝' },
+      { id: 'speed_king', icon: '⚡', name: '神速手', desc: '回答時間少於 1 秒' },
+      { id: 'lv2', icon: '🛡️', name: '等級 2 勇者', desc: '達到 Lv.2 解鎖時間凍結' },
+      { id: 'lv3', icon: '🔮', name: '等級 3 大導師', desc: '達到 Lv.3 解鎖排除答案' },
+      { id: 'score_1000', icon: '👑', name: '千分高手的榮耀', desc: '單局得分超過 1000 分' }
+    ];
+
+    // 運行時狀態
+    let currentDifficulty = 'easy';
+    let timer = 60;
+    let timerInterval = null;
+    let currentScore = 0;
+    let combo = 0;
+    let maxCombo = 0;
+    let currentQuestion = {};
+    let questionStartTime = 0;
+    let isFreezeActive = false;
+    let skillFiftyUsed = false;
+    let isAnsweringLocked = false;
+
+    // --- 初始化 ---
+    updatePlayerHeader();
+
+    function savePlayerData() {
+      localStorage.setItem('math_game_player', JSON.stringify(playerData));
+    }
+
+    function updatePlayerHeader() {
+      document.getElementById('player-level').innerText = `Lv.${playerData.level} ${getLevelTitle(playerData.level)}`;
+      document.getElementById('total-score').innerText = playerData.totalScore;
+      
+      // 計算經驗值百分比 (每級需要 level * 500 exp)
+      const reqExp = playerData.level * 500;
+      const expPercent = Math.min(100, (playerData.exp / reqExp) * 100);
+      document.getElementById('exp-fill').style.width = `${expPercent}%`;
+    }
+
+    function getLevelTitle(level) {
+      if (level === 1) return '乘法新手';
+      if (level === 2) return '乘法騎士';
+      if (level === 3) return '乘法大師';
+      return '乘法傳奇';
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+
+      if (screenId === 'trophy-screen') {
+        renderTrophies();
+      }
+    }
+
+    // --- 遊戲邏輯 ---
+    function startGame(difficulty) {
+      currentDifficulty = difficulty;
+      timer = 60;
+      currentScore = 0;
+      combo = 0;
+      maxCombo = 0;
+      skillFiftyUsed = false;
+
+      document.getElementById('timer').innerText = timer;
+      document.getElementById('current-score').innerText = currentScore;
+      document.getElementById('combo-count').innerText = combo;
+
+      updateSkillButtons();
+      showScreen('game-screen');
+      nextQuestion();
+
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (!isFreezeActive) {
+          timer--;
+          document.getElementById('timer').innerText = timer;
+          if (timer <= 0) {
+            endGame();
+          }
+        }
+      }, 1000);
+    }
+
+    function generateQuestion() {
+      const tables = GAME_CONFIG[currentDifficulty].tables;
+      const num1 = tables[Math.floor(Math.random() * tables.length)];
+      const num2 = Math.floor(Math.random() * 9) + 1; // 1~9
+      const answer = num1 * num2;
+
+      // 生成 3 個干擾項
+      let options = new Set([answer]);
+      while (options.size < 4) {
+        let wrong;
+        const rand = Math.random();
+        if (rand < 0.4) {
+          wrong = answer + (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 3) + 1);
+        } else if (rand < 0.7) {
+          wrong = answer + (Math.random() > 0.5 ? 10 : -10);
+        } else {
+          wrong = (num1 + (Math.random() > 0.5 ? 1 : -1)) * num2;
+        }
+        if (wrong > 0 && wrong !== answer) {
+          options.add(wrong);
+        }
+      }
+
+      return {
+        num1,
+        num2,
+        answer,
+        options: Array.from(options).sort(() => Math.random() - 0.5)
+      };
+    }
+
+    function nextQuestion() {
+      isAnsweringLocked = false;
+      currentQuestion = generateQuestion();
+      document.getElementById('question').innerText = `${currentQuestion.num1} × ${currentQuestion.num2} = ?`;
+      
+      const container = document.getElementById('options-container');
+      container.innerHTML = '';
+
+      currentQuestion.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = (e) => checkAnswer(opt, btn, e);
+        container.appendChild(btn);
+      });
+
+      questionStartTime = Date.now();
+      document.getElementById('time-bonus-tag').style.opacity = '1';
+    }
+
+    function checkAnswer(selected, buttonEl, event) {
+      if (isAnsweringLocked) return;
+      isAnsweringLocked = true;
+
+      const timeTaken = (Date.now() - questionStartTime) / 1000; // 秒
+      const isCorrect = selected === currentQuestion.answer;
+
+      if (isCorrect) {
+        buttonEl.classList.add('correct');
+        combo++;
+        if (combo > maxCombo) maxCombo = combo;
+
+        // 得分計算：基礎分 + 時間加成 (答得越快分越高，最高加成 100 分) + 連擊加成
+        const base = GAME_CONFIG[currentDifficulty].baseScore;
+        const timeBonus = Math.max(0, Math.floor((3 - timeTaken) * 30)); // 3秒內回答有加成
+        const comboBonus = combo * 10;
+        const pointsEarned = base + timeBonus + comboBonus;
+
+        currentScore += pointsEarned;
+        
+        // 浮動文字特效
+        showFloatingText(`+${pointsEarned}`, event.clientX, event.clientY, '#2ed573');
+
+        // 檢查快答成就
+        if (timeTaken < 1.0) {
+          unlockBadge('speed_king');
+        }
+
+      } else {
+        buttonEl.classList.add('wrong');
+        combo = 0;
+        showFloatingText(`X`, event.clientX, event.clientY, '#ff4757');
+
+        // 標示正確答案
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(btn => {
+          if (parseInt(btn.innerText) === currentQuestion.answer) {
+            btn.classList.add('correct');
+          }
+        });
+      }
+
+      document.getElementById('current-score').innerText = currentScore;
+      document.getElementById('combo-count').innerText = combo;
+
+      if (combo >= 10) {
+        unlockBadge('combo_10');
+      }
+
+      setTimeout(() => {
+        nextQuestion();
+      }, isCorrect ? 400 : 1000);
+    }
+
+    function showFloatingText(text, x, y, color) {
+      const el = document.createElement('div');
+      el.className = 'floating-text';
+      el.innerText = text;
+      el.style.left = `${x}px`;
+      el.style.top = `${y - 20}px`;
+      el.style.color = color;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 800);
+    }
+
+    // --- 技能系統 ---
+    function updateSkillButtons() {
+      const freezeBtn = document.getElementById('skill-freeze');
+      const fiftyBtn = document.getElementById('skill-fifty');
+
+      if (playerData.level >= 2) {
+        freezeBtn.classList.add('available');
+        freezeBtn.classList.remove('disabled');
+        document.getElementById('freeze-req').innerText = '點擊使用';
+      }
+      if (playerData.level >= 3 && !skillFiftyUsed) {
+        fiftyBtn.classList.add('available');
+        fiftyBtn.classList.remove('disabled');
+        document.getElementById('fifty-req').innerText = '點擊使用';
+      }
+    }
+
+    function useSkill(type) {
+      if (type === 'freeze' && playerData.level >= 2 && !isFreezeActive) {
+        isFreezeActive = true;
+        const btn = document.getElementById('skill-freeze');
+        btn.classList.remove('available');
+        btn.classList.add('disabled');
+        btn.querySelector('span').innerText = '❄️ 凍結中...';
+
+        setTimeout(() => {
+          isFreezeActive = false;
+          btn.querySelector('span').innerText = '❄️ 時間凍結 (已用)';
+        }, 5000);
+      }
+
+      if (type === 'fifty' && playerData.level >= 3 && !skillFiftyUsed) {
+        skillFiftyUsed = true;
+        const btn = document.getElementById('skill-fifty');
+        btn.classList.remove('available');
+        btn.classList.add('disabled');
+        btn.querySelector('span').innerText = '🎯 已排除';
+
+        // 移除 2 個錯誤選項
+        const buttons = Array.from(document.querySelectorAll('.option-btn'));
+        let removed = 0;
+        buttons.forEach(b => {
+          if (parseInt(b.innerText) !== currentQuestion.answer && removed < 2) {
+            b.style.visibility = 'hidden';
+            removed++;
+          }
+        });
+      }
+    }
+
+    // --- 結算與成就系統 ---
+    function endGame() {
+      clearInterval(timerInterval);
+      showScreen('result-screen');
+
+      document.getElementById('result-score').innerText = currentScore;
+
+      // 經驗值計算
+      const gainedExp = Math.floor(currentScore / 2);
+      document.getElementById('gained-exp').innerText = gainedExp;
+
+      playerData.exp += gainedExp;
+      playerData.totalScore += currentScore;
+
+      // 升級檢測
+      const reqExp = playerData.level * 500;
+      if (playerData.exp >= reqExp) {
+        playerData.level++;
+        playerData.exp -= reqExp;
+        alert(`🎉 恭喜升級到 Lv.${playerData.level}！獲得新稱號與技能！`);
+        
+        if (playerData.level >= 2) unlockBadge('lv2');
+        if (playerData.level >= 3) unlockBadge('lv3');
+      }
+
+      // 成就檢測
+      unlockBadge('first_play');
+      if (currentScore >= 1000) unlockBadge('score_1000');
+
+      // 檢查本次獲得的特別獎勵
+      checkSpecialRewards();
+
+      savePlayerData();
+      updatePlayerHeader();
+    }
+
+    function checkSpecialRewards() {
+      const rewardBox = document.getElementById('reward-box');
+      const rewardIcon = document.getElementById('reward-icon');
+      const rewardTitle = document.getElementById('reward-title');
+      const rewardDesc = document.getElementById('reward-desc');
+
+      if (currentScore >= 1200) {
+        rewardBox.style.display = 'flex';
+        rewardIcon.innerText = '👑';
+        rewardTitle.innerText = '特別獎勵：乘法高超神童勳章！';
+        rewardDesc.innerText = '單局超過 1200 分，太厲害了！獲得專屬神童頭銜！';
+      } else if (maxCombo >= 15) {
+        rewardBox.style.display = 'flex';
+        rewardIcon.innerText = '⚡';
+        rewardTitle.innerText = '特別獎勵：連勝大師禮包！';
+        rewardDesc.innerText = '連續答對 15 題以上！展現了超強專注力！';
+      } else if (currentScore >= 600) {
+        rewardBox.style.display = 'flex';
+        rewardIcon.innerText = '🎁';
+        rewardTitle.innerText = '特別獎勵：優秀學習星！';
+        rewardDesc.innerText = '表現優異！繼續保持，邁向乘法大師！';
+      } else {
+        rewardBox.style.display = 'none';
+      }
+    }
+
+    function unlockBadge(badgeId) {
+      if (!playerData.unlockedBadges.includes(badgeId)) {
+        playerData.unlockedBadges.push(badgeId);
+        savePlayerData();
+      }
+    }
+
+    function renderTrophies() {
+      const container = document.getElementById('badges-container');
+      container.innerHTML = '';
+
+      BADGES.forEach(badge => {
+        const isUnlocked = playerData.unlockedBadges.includes(badge.id);
+        const div = document.createElement('div');
+        div.className = `badge-item ${isUnlocked ? 'unlocked' : ''}`;
+        div.innerHTML = `
+          <span class="badge-icon">${isUnlocked ? badge.icon : '🔒'}</span>
+          <strong>${badge.name}</strong>
+          <div style="font-size:0.75rem; margin-top:2px;">${badge.desc}</div>
+        `;
+        container.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>
